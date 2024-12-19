@@ -18,33 +18,38 @@ namespace KonverterValutes
             private string _entryText1;
             private string _entryText2;
             private DateTime _date = DateTime.Now;
-            private string char_code_1 = "";
-            private string char_code_2 = "";
+            private string charCode1 = "";
+            private string charCode2 = "";
             private CurrencyService _currencyServiece = new CurrencyService();
             public Dictionary<string, double> currencies { get; set; } =
                 new Dictionary<string, double> ();
-            public ObservableCollection<string> currencies_list { get; set; } =
+            public ObservableCollection<string> currenciesList { get; set; } =
                 new ObservableCollection<string>();
             public ICommand LoadCurrenciesCommand { get; }
             public MyViewModel()
             {
                 // Как запустить со старта 
                 LoadCurrenciesAsync();
-                char_code_1 = "";
-                char_code_2 = "";
+                charCode1 = "";
+                charCode2 = "";
                 LoadCurrenciesCommand = new Command(async () => await LoadCurrenciesAsync());
             }
 
             public async Task LoadCurrenciesAsync ()
             {
                 var currencies_ = await _currencyServiece.GetCurrenciesAsync(_date);
+                var tempCode1 = charCode1;
+                var tempCode2 = charCode2;
+
                 currencies.Clear();
-                currencies_list.Clear();
+                currenciesList.Clear();
                 foreach (var currency in currencies_)
                 {
                     currencies.Add(currency.Key, currency.Value);
-                    currencies_list.Add(currency.Key);
+                    currenciesList.Add(currency.Key);
                 }
+                SelectedCurrency1 = tempCode1;
+                SelectedCurrency2 = tempCode2;
             }
 
             public string EntryText1
@@ -54,9 +59,9 @@ namespace KonverterValutes
                 {
                     if (_entryText1 == value) return;
                     _entryText1 = value;
-                    if (value is string str && char_code_1 != ""  && char_code_2 != "" && double.TryParse(str, out double num))
+                    if (value is string str && charCode1 != ""  && charCode2 != "")
                     {
-                        _entryText2 = convert_to(num, char_code_1, char_code_2).ToString();
+                        _entryText2 = ConvertTo(str, charCode1, charCode2).ToString();
                     }
                     OnPropertyChanged(nameof(EntryText1));
                     OnPropertyChanged(nameof(EntryText2));
@@ -70,8 +75,8 @@ namespace KonverterValutes
                 {
                     if (_entryText2 == value) return;
                     _entryText2 = value;
-                    if (value is string str && char_code_1 != "" && char_code_2 != "" && double.TryParse(str, out double num))
-                        _entryText1 = convert_to(num, char_code_2, char_code_1).ToString(); // func that convert
+                    if (value is string str && charCode1 != "" && charCode2 != "")
+                        _entryText1 = ConvertTo(str, charCode2, charCode1).ToString(); // func that convert
                     OnPropertyChanged(nameof(EntryText1));
                     OnPropertyChanged(nameof(EntryText2));
                 }
@@ -85,7 +90,10 @@ namespace KonverterValutes
                     if (_date == value) return;
                     _date = value;
                     LoadCurrenciesAsync();
+                    SelectedCurrency2 = charCode2;
+
                     OnPropertyChanged(nameof(SelectedDate));
+                    OnPropertyChanged(nameof(SelectedCurrency2));
                 }
 
             }
@@ -96,38 +104,51 @@ namespace KonverterValutes
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
             }
 
-            private double convert_to(double num, string first_char, string second_char)
+            private double ConvertTo(string inputString, string firstChar, string secodChar)
             {
-                if (currencies.Count > 0 && first_char != null && second_char != null && first_char != "" && second_char != "")
+                if (!double.TryParse(inputString, out double num))
                 {
-                    double k = currencies[first_char] / currencies[second_char];
+                    return 0;
+                }
+
+                if (currencies.Count > 0 && firstChar != null && secodChar != null && firstChar != "" && secodChar != "")
+                {
+                    double k = currencies[firstChar] / currencies[secodChar];
                     return num  * k;
                 }
                 return num;
             }
 
             public string SelectedCurrency1 {
-                get => char_code_1;
+                get => charCode1;
                 set
                 {
-                    char_code_1 = value;
-                    OnPropertyChanged(nameof(SelectedCurrency1));
-                    // Не работает обновление при событии пикера
-                    OnPropertyChanged(nameof(EntryText1));
-                    OnPropertyChanged(nameof(EntryText2));
+                    if (charCode1 != value)
+                    {
+                        charCode1 = value;
+                        OnPropertyChanged(nameof(SelectedCurrency1));
+                        EntryText1 = ConvertTo(EntryText2, charCode2, charCode1).ToString();
+                        OnPropertyChanged(nameof(EntryText1));
+                    }
+                    
                 }
             }
 
             public string SelectedCurrency2
             {
-                get => char_code_2;
+                get => charCode2;
                 set
                 {
-                    char_code_2 = value;
-                    OnPropertyChanged(nameof(SelectedCurrency2));
-                    // Не работает обновление при событии пикера
-                    OnPropertyChanged(nameof(EntryText1));
-                    OnPropertyChanged(nameof(EntryText2));
+                    if (charCode2 != value )
+                    {
+                        charCode2 = value;
+                        OnPropertyChanged(nameof(SelectedCurrency2));
+                        // Не работает обновление при событии пикера
+                        EntryText2 = ConvertTo(EntryText1, charCode2, charCode1).ToString();
+                        OnPropertyChanged(nameof(EntryText2));
+                    }
+                    
+                    
                 }
             }
 
@@ -158,12 +179,12 @@ namespace KonverterValutes
             if (response?.Valute !=null)
             {
                 Dictionary<string, double>  res = new Dictionary<string, double>();
-                var a = response.Valute.Keys.ToList();
-                var b = response.Valute.Values.ToList();
-                int n = a.Count;
-                for (int i = 0; i < n;i++)
+                var keys = response.Valute.Keys.ToList();
+                var values = response.Valute.Values.ToList();
+                int count = keys.Count;
+                for (int i = 0; i < count;i++)
                 {
-                    res.Add(a[i], b[i].Value);
+                    res.Add(keys[i], values[i].Value / values[i].Nominal);
                 }
                 res.Add("Rub", 1);
                 return res;

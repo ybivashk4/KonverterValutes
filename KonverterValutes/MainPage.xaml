@@ -7,12 +7,12 @@
     <Grid RowDefinitions="Auto, Auto, Auto" ColumnDefinitions="Auto, Auto">
         <Entry Grid.Row="0" WidthRequest="400" Text="{Binding EntryText1}"></Entry>
         <Picker Grid.Row="0" Grid.Column="1" WidthRequest="150" Title="Выберите валюту" 
-                ItemsSource="{Binding currencies_list}" SelectedItem="{Binding SelectedCurrency1}"/>
+                ItemsSource="{Binding currenciesList}" SelectedItem="{Binding SelectedCurrency1}"/>
         
         
         <Entry Grid.Row="1" WidthRequest="400" Text="{Binding EntryText2}"></Entry>
         <Picker Grid.Row="1" Grid.Column="1" WidthRequest="150" Title="Выберите валюту"
-                ItemsSource="{Binding currencies_list}" SelectedItem="{Binding SelectedCurrency2}"/>
+                ItemsSource="{Binding currenciesList}" SelectedItem="{Binding SelectedCurrency2}"/>
         
         
         <DatePicker x:Name="datePicker"
