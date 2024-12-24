@@ -48,7 +48,7 @@ namespace KonverterValutes
                     currencies.Add(currency.Key, currency.Value);
                     currenciesList.Add(currency.Key);
                 }
-                SelectedCurrency1 = tempCode1;
+                //SelectedCurrency1 = tempCode1;
                 SelectedCurrency2 = tempCode2;
             }
 
@@ -143,8 +143,7 @@ namespace KonverterValutes
                     {
                         charCode2 = value;
                         OnPropertyChanged(nameof(SelectedCurrency2));
-                        // Не работает обновление при событии пикера
-                        EntryText2 = ConvertTo(EntryText1, charCode2, charCode1).ToString();
+                        EntryText2 = ConvertTo(EntryText1, charCode1, charCode2).ToString();
                         OnPropertyChanged(nameof(EntryText2));
                     }
                     
